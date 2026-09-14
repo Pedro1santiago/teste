@@ -4,7 +4,7 @@ Backend mock que simula uma operação de delivery em tempo real, servindo de ap
 
 ## Como rodar
 
-Requer Java 21 e um PostgreSQL acessível. Configure via variáveis de ambiente (todas têm um default local para desenvolvimento):
+Requer Java 21 e PostgreSQL 16 acessível (driver `org.postgresql:postgresql:42.7.13`, Flyway `12.4.0` — versões fixadas no `build.gradle.kts`). Configure via variáveis de ambiente — não há mais default local, todas são obrigatórias:
 
 ```bash
 export DATABASE_URL=jdbc:postgresql://<host>:5432/<database>?sslmode=require
@@ -19,13 +19,15 @@ export PORT=8080
 
 O Flyway cria o schema automaticamente na primeira subida (`src/main/resources/db/migration`).
 
+**Segredos locais:** nunca commite credencial nenhuma. Pra rodar localmente com valores reais, crie `src/main/resources/application-secret.properties` (já está no `.gitignore`, nunca vai pro git) com `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `PORT`, e ative o profile `secret` (`SPRING_PROFILES_ACTIVE=secret ./gradlew bootRun`). Em produção (Render), essas variáveis vêm do painel de environment do host, nunca de um arquivo versionado.
+
 **Neon:** exige SSL — inclua `?sslmode=require` na `DATABASE_URL` (a connection string que o Neon fornece já vem com isso). Prefira a connection string **pooled** (via PgBouncer) que o Neon disponibiliza, já que o app roda com o pool padrão do Spring (HikariCP) e vários pedidos concorrentes (HTTP + scheduler de simulação + SSE).
 
 **Hospedagem:** este backend precisa de um processo persistente (tem um scheduler `@Scheduled` rodando em background e conexões SSE de longa duração) — **não funciona em plataformas serverless como Vercel**, cuja execução é por requisição e tem timeout curto. Use algo com processo always-on: Render, Railway, Fly.io, ou um VPS com Docker.
 
 ### Deploy: Render + Neon + UptimeRobot
 
-1. **Neon** — crie o projeto, pegue a *pooled connection string* (via PgBouncer) e monte as variáveis `DATABASE_URL` (com `?sslmode=require`), `DATABASE_USERNAME`, `DATABASE_PASSWORD`.
+1. **Neon** — crie o projeto escolhendo **Postgres 16**, pegue a *pooled connection string* (via PgBouncer) e monte as variáveis `DATABASE_URL` (com `?sslmode=require`), `DATABASE_USERNAME`, `DATABASE_PASSWORD`.
 2. **Render** — "New Web Service", aponte pro repositório, ambiente **Docker** (usa o `Dockerfile` da raiz, não precisa configurar build/start command na mão). Configure as env vars do passo 1 (`PORT` o Render já injeta sozinho).
 3. **UptimeRobot** — crie um monitor HTTP(s) apontando pra `https://<seu-app>.onrender.com/health`, intervalo de 5 minutos (mínimo do free tier). Isso é o que impede o Render de suspender o serviço por inatividade — o plano free do Render dorme depois de ~15 min sem tráfego *externo*, e nenhum processo interno (nem o `@Scheduled` da simulação) evita isso, já que a decisão de dormir olha só requisições HTTP chegando de fora.
 
