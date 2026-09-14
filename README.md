@@ -23,6 +23,14 @@ O Flyway cria o schema automaticamente na primeira subida (`src/main/resources/d
 
 **Hospedagem:** este backend precisa de um processo persistente (tem um scheduler `@Scheduled` rodando em background e conexões SSE de longa duração) — **não funciona em plataformas serverless como Vercel**, cuja execução é por requisição e tem timeout curto. Use algo com processo always-on: Render, Railway, Fly.io, ou um VPS com Docker.
 
+### Deploy: Render + Neon + UptimeRobot
+
+1. **Neon** — crie o projeto, pegue a *pooled connection string* (via PgBouncer) e monte as variáveis `DATABASE_URL` (com `?sslmode=require`), `DATABASE_USERNAME`, `DATABASE_PASSWORD`.
+2. **Render** — "New Web Service", aponte pro repositório, ambiente **Docker** (usa o `Dockerfile` da raiz, não precisa configurar build/start command na mão). Configure as env vars do passo 1 (`PORT` o Render já injeta sozinho).
+3. **UptimeRobot** — crie um monitor HTTP(s) apontando pra `https://<seu-app>.onrender.com/health`, intervalo de 5 minutos (mínimo do free tier). Isso é o que impede o Render de suspender o serviço por inatividade — o plano free do Render dorme depois de ~15 min sem tráfego *externo*, e nenhum processo interno (nem o `@Scheduled` da simulação) evita isso, já que a decisão de dormir olha só requisições HTTP chegando de fora.
+
+`GET /health` não depende do banco nem de nada além do processo estar de pé — é só o alvo do ping, não faz parte do contrato do desafio.
+
 ## Rodar os testes
 
 ```bash
