@@ -6,12 +6,14 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 interface SpringDataOrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
         JpaSpecificationExecutor<OrderJpaEntity> {
 
+    @Transactional
     @Modifying
     @Query("UPDATE OrderJpaEntity o SET o.status = :status, o.version = :newVersion " +
             "WHERE o.id = :id AND o.version = :expectedVersion")
