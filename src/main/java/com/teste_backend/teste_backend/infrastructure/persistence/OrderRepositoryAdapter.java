@@ -70,4 +70,9 @@ class OrderRepositoryAdapter implements OrderRepository {
                 .map(OrderMapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public boolean hasAny() {
+        return jpaRepository.count() > 0;
+    }
 }

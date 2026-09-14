@@ -14,4 +14,6 @@ public interface OrderRepository {
     PagedResult<Order> search(OrderSearchCriteria criteria);
 
     List<Order> findActive();
+
+    boolean hasAny();
 }

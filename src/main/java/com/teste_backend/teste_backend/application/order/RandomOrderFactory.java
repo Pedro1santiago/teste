@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Component
-class RandomOrderFactory {
+public class RandomOrderFactory {
 
     private static final List<String> CLIENT_NAMES = List.of(
             "Maria Silva", "João Souza", "Ana Pereira", "Carlos Lima",
@@ -22,7 +22,7 @@ class RandomOrderFactory {
             "Rua Augusta, 900 — Consolação", "Rua Oscar Freire, 300 — Jardins"
     );
 
-    Order next(OffsetDateTime now) {
+    public Order next(OffsetDateTime now) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
         String clientName = CLIENT_NAMES.get(random.nextInt(CLIENT_NAMES.size()));
